@@ -7,16 +7,18 @@ const hashPassword = password => bcrypt.hashSync(password, bcrypt.genSaltSync(8)
 
 export const register = ({ email, password }) => new Promise(async (resolve, reject) => {
     try {
-        const response = await db.User.findOrCreate({
+        const response = await db.User.findOrCreate({ // email exist tra ve false
             where: { email },
             defaults: {
                 email,
                 password: hashPassword(password)
             }
         })
-        const accessToken = response[1]
+
+        const accessToken = response[1] // khong thi tra ve true
             ? jwt.sign({ id: response[0].id, email: response[0].email, role_code: response[0].role_code }, process.env.JWT_SECRET, { expiresIn: '5s' })
             : null
+
         // JWT_SECRET_REFRESH_TOKEN
         const refreshToken = response[1]
             ? jwt.sign({ id: response[0].id }, process.env.JWT_SECRET_REFRESH_TOKEN, { expiresIn: '15d' })
@@ -45,6 +47,7 @@ export const login = ({ email, password }) => new Promise(async (resolve, reject
             raw: true
         })
         const isChecked = response && bcrypt.compareSync(password, response.password)
+        console.log(isChecked)
         const accessToken = isChecked
             ? jwt.sign({ id: response.id, email: response.email, role_code: response.role_code }, process.env.JWT_SECRET, { expiresIn: '5s' })
             : null

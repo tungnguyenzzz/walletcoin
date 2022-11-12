@@ -1,36 +1,38 @@
-import * as authService from '../services/auth'
+import * as services from "../services"
+import { interalServerError, badRequest } from "../middlewares/handle_errors"
+import { email, password, refreshToken } from "../helpers/joi_schema.js"
+import joi from 'joi'
 
 export const register = async (req, res) => {
-    const { name, phone, password } = req.body
     try {
-        if (!name || !phone || !password) return res.status(400).json({
-            err: 1,
-            msg: 'Missing inputs !'
-        })
-        const response = await authService.registerService(req.body)
+        const { error } = joi.object({ email, password }).validate(req.body)
+        if (error) return badRequest(error.details[0]?.message, res)
+        const response = await services.register(req.body)
         return res.status(200).json(response)
 
     } catch (error) {
-        return res.status(500).json({
-            err: -1,
-            msg: 'Fail at auth controller: ' + error
-        })
+        return interalServerError(res)
     }
 }
 export const login = async (req, res) => {
-    const { phone, password } = req.body
     try {
-        if (!phone || !password) return res.status(400).json({
-            err: 1,
-            msg: 'Missing inputs !'
-        })
-        const response = await authService.loginService(req.body)
+        const { error } = joi.object({ email, password }).validate(req.body)
+        if (error) return badRequest(error.details[0]?.message, res)
+        const response = await services.login(req.body)
         return res.status(200).json(response)
 
     } catch (error) {
-        return res.status(500).json({
-            err: -1,
-            msg: 'Fail at auth controller: ' + error
-        })
+        return interalServerError(res)
+    }
+}
+export const refreshTokenController = async (req, res) => {
+    try {
+        const { error } = joi.object({ refreshToken }).validate(req.body)
+        if (error) return badRequest(error.details[0]?.message, res)
+        const response = await services.refreshToken(req.body.refreshToken)
+        return res.status(200).json(response)
+
+    } catch (error) {
+        return interalServerError(res)
     }
 }
